@@ -1,0 +1,31 @@
+{
+  "name": "hockit",
+  "version": "1.0.0",
+  "description": "Super simple file sharing server.",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "rollup ./src/client.js --file ./dist/client.js --format iife",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Floofies/hockit.git"
+  },
+  "author": "Dani Glore",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Floofies/hockit/issues"
+  },
+  "homepage": "https://github.com/Floofies/hockit#readme",
+  "dependencies": {
+    "express": "",
+    "bcrypt": "",
+    "nanoid": "",
+    "multer": "",
+    "filenamify": "",
+    "image-thumbnail": ""
+  },
+  "bin": {
+    "hockit": "index.js"
+  }
+}

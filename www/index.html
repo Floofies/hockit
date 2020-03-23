@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>HockIt</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<style>
+		html {
+			margin: 0;
+		}
+
+		body {
+			margin: 0;
+			text-align: center;
+			background-color: black;
+			display: flex;
+			flex-flow: column;
+			align-items: center;
+			justify-content: center
+		}
+
+		h1,
+		h2,
+		h3,
+		h4 {
+			color: rgb(0, 255, 0);
+			font-family: 'Courier New', Courier, monospace;
+		}
+
+		.box {
+			position: relative;
+			padding: 25px;
+			font-family: sans-serif;
+			font-size: 2vmin;
+			line-height: 2vmin;
+			border: 5px solid darkgrey;
+			color: white;
+			background-color: dimgrey;
+		}
+	</style>
+	<script type="text/javascript">
+	window.addEventListener("load", () => {
+		const file = document.getElementById("file");
+		const button = document.getElementById("button");
+		const form = document.getElementById("form");
+		file.addEventListener("change", () => {
+			if (file.files.length > 0) {
+				button.setAttribute("value", "Upload File");
+				form.setAttribute("action", "/upload");
+			} else {
+				button.setAttribute("value", "List Files");
+				form.setAttribute("action", "/list");
+			}
+		});
+	});
+	</script>
+</head>
+
+<body>
+	<h1>HockIt</h1>
+	<div class="box">
+		<form id="form" action="/list" enctype="multipart/form-data" method="post">
+			<label for="password">Password:</label>
+			<input type="password" name="password" autocomplete="current-password">
+			<br>
+			<input id="file" type="file" name="upload">
+			<br>
+			<input id="button" type="submit" value="List Files">
+		</form>
+	</div>
+	<h4>v1.0.0</h4>
+</body>
+
+</html>
