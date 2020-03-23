@@ -2,6 +2,7 @@
 // HockIt V1
 const bcrypt = require("bcrypt");
 const fs = require('fs');
+const path = require('path');
 const confPath = "./config.json";
 try { fs.statSync(confPath); }
 catch (_) { fs.closeSync(fs.openSync(confPath, "w")); }
@@ -21,25 +22,51 @@ if (confJson.length === 0) {
 } else {
 	var config = JSON.parse(confJson);
 }
-if (process.argv[2]) {
-	const argName = process.argv[2];
-	if (argName === "passwd") {
-		if (process.argv[3]) {
-			console.log("Setting new HockIt password");
-			bcrypt.hash(process.argv[3], 10, (e, hash) => {
-				config.hash = hash;
-				saveConfig(config);
-			});
-		}
-	} else if (argName === "domain") {
-		if (process.argv[3]) {
-			console.log("Setting HockIt domain name to " + process.argv[3]);
-			config.fqdn = process.argv[3];
-			saveConfig(config);
-		}
-	}
+if (!process.argv[2]) {
+	console.log("Syntax: hockit <command> <argument>");
+	console.log("Commands: passwd <password> | domain <uri> | list | delete <hash> | up <file> | start\n");
+	console.log("passwd <password>\n\tSets the password.");
+	console.log("domain <uri>\n\tSets the FQDN or port number to bind with HTTP.");
+	console.log("list\n\tLists all uploaded files and their hashes.");
+	console.log("delete <hash>\n\tDeletes a file using it's upload hash.");
+	console.log("up <file>\n\tUploads a file and returns a shortlink hash. (Not Implemented)");
+	console.log("start\n\tStarts an HTTP server on this session.");
 	return;
 }
+const argName = process.argv[2];
+if (argName === "passwd") {
+	if (process.argv[3]) {
+		console.log("Setting new HockIt password");
+		bcrypt.hash(process.argv[3], 10, (e, hash) => {
+			config.hash = hash;
+			saveConfig(config);
+		});
+	}
+} else if (argName === "domain") {
+	if (process.argv[3]) {
+		console.log("Setting HockIt domain name to " + process.argv[3]);
+		config.fqdn = process.argv[3];
+		saveConfig(config);
+	}
+} else if (argName === "list") {
+	var list = [];
+	for (const hash in config.links) list.push("\t" + hash + " -> " + config.links[hash] + "\n");
+	console.log(list.length + " files downloadable in " + path.resolve(config.webroot + "/uploads"));
+	if (list.length > 0) console.log(list.join(""));
+} else if (argName === "delete") {
+	if (process.argv[3]) {
+		if (!(String(process.argv[3]) in config.links)) return console.log("No file found.");
+		console.log("Deleting file " + process.argv[3]);
+		fs.unlink(config.webroot + "/uploads/" + config.links[process.argv[3]], () => { });
+		fs.unlink(config.webroot + "/uploads/t-" + config.links[process.argv[3]], () => { });
+		delete config.links[process.argv[3]];
+		saveConfig(config);
+	}
+} else if (argName === "up") {
+	console.log("Not implemented yet.");
+}
+if (process.argv[2] !== "start") return;
+if (config.hash === "") return console.log("Missing password! Set up password with the \"passwd\" argument.");
 console.log("Starting HockIt server");
 try { fs.statSync(config.webroot); }
 catch (_) { fs.mkdirSync(config.webroot); }
@@ -52,8 +79,7 @@ function auth(req, callback) {
 		else callback(new Error("Incorrect password!"), false);
 	});
 }
-if ((typeof window) === "undefined" || !("btoa" in window)) var btoa = v => Buffer.from(v).toString("base64");
-if ((typeof window) === "undefined" || !("atob" in window)) var atob = v => Buffer.from(v, "base64").toString();
+var btoa = v => Buffer.from(v).toString("base64");
 const express = require('express');
 const multer = require("multer");
 const disk = multer.diskStorage({
@@ -88,7 +114,7 @@ app.post("/list", upload.none(), (req, res, next) => {
 		const links = [];
 		for (const hash in config.links) {
 			links.push({
-				src: config.links[hash],
+				name: config.links[hash].slice(config.links[hash].indexOf("-") + 1),
 				hash: hash,
 				thumb: "t-" + config.links[hash]
 			});
@@ -99,22 +125,24 @@ app.post("/list", upload.none(), (req, res, next) => {
 app.post("/upload",
 	upload.single("upload"),
 	(req, res, next) => {
-		const path =config.webroot + "/uploads/" + req.filename;
+		const path = config.webroot + "/uploads/" + req.filename;
 		try {
-			imageThumbnail(path, {
-				width: 256,
-				height: 256
-			}).then(buf => fs.writeFile(config.webroot + "/uploads/t-" + req.filename, buf, ()=>{}));
+			if (req.body.image) {
+				imageThumbnail(path, {
+					width: 256,
+					height: 256
+				}).then(buf => fs.writeFile(config.webroot + "/uploads/t-" + req.filename, buf, () => { }));
+			}
 			config.links[req.linkHash] = req.filename;
 			saveConfig(config);
 			res.redirect("uploads?list=" + encodeURIComponent(btoa(JSON.stringify([{
-				src: path,
+				name: req.file.originalname,
 				hash: req.linkHash,
-				thumb: "t-" + req.filename
+				thumb: req.body.image ? "t-" + req.filename : "/file-download-outline.png"
 			}]))));
 		} catch (error) {
-			//res.statusCode(500);
-			res.send(error.toString());
+			console.error(error);
+			res.sendStatus(500);
 		}
 	});
 app.get('/:id', (req, res) => {
@@ -124,6 +152,6 @@ app.get('/:id', (req, res) => {
 	else res.sendStatus(404);
 });
 app.use(function (err, req, res, next) {
-	res.send(err.message);
+	res.status(500).send(err.message);
 });
-app.listen(8080);
+app.listen(config.fqdn ? config.fqdn : 8080);

@@ -25,6 +25,44 @@
 			color: rgb(0, 255, 0);
 			font-family: 'Courier New', Courier, monospace;
 		}
+		h1::after {
+			content: "";
+			display: inline-block;
+			background-color: rgb(0, 255, 0);
+			width: 10px;
+			margin-left:5px;
+			height: 2px;
+			-webkit-animation: blink 1s step-end infinite;
+			animation: blink 1s step-end infinite;
+		}
+
+		@-webkit-keyframes blink {
+			0% {
+				opacity: 1.0;
+			}
+
+			50% {
+				opacity: 0.0;
+			}
+
+			100% {
+				opacity: 1.0;
+			}
+		}
+
+		@keyframes blink {
+			0% {
+				opacity: 1.0;
+			}
+
+			50% {
+				opacity: 0.0;
+			}
+
+			100% {
+				opacity: 1.0;
+			}
+		}
 		a {
 			color: rgb(0, 255, 0);
 		}
@@ -67,14 +105,18 @@
 				item.classList.add("item");
 				const imgEl = document.createElement("img");
 				imgEl.setAttribute("src", image.thumb);
+				imgEl.addEventListener("error", err => {
+					err.target.setAttribute("src", "/file-download-outline.png");
+				})
 				const aEl = document.createElement("a");
-				aEl.setAttribute("href", image.src);
+				aEl.setAttribute("href", "/" + image.hash);
 				aEl.appendChild(imgEl);
 				const aEl2 = document.createElement("a");
-				aEl2.setAttribute("href", image.src);
+				aEl2.setAttribute("href", "/" + image.hash);
 				aEl2.textContent = window.location.hostname + "/" + image.hash;
 				item.appendChild(aEl);
 				item.appendChild(aEl2);
+				item.appendChild(document.createTextNode(image.name));
 				list.appendChild(item);
 			}
 		});
@@ -82,7 +124,7 @@
 </head>
 
 <body>
-	<h1>HockIt</h1>
+	<h1>$ hockit list</h1>
 	<div class="box">
 		<button onclick="location.href='/'" type="button">Uploader</button>
 		<div id="list" class="list"></div>
