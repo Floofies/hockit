@@ -1,157 +1,218 @@
-#!/usr/bin/env node
-// HockIt V1
 const bcrypt = require("bcrypt");
 const fs = require('fs');
-const path = require('path');
-const confPath = "./config.json";
-try { fs.statSync(confPath); }
-catch (_) { fs.closeSync(fs.openSync(confPath, "w")); }
-const confJson = fs.readFileSync(confPath).toString("utf8");
-function saveConfig(config) {
-	fs.writeFileSync(confPath, JSON.stringify(config));
-}
-if (confJson.length === 0) {
-	var config = {
-		webroot: "./www",
-		fqdn: "",
-		links: {},
-		token: null,
-		hash: null
-	};
-	saveConfig(config);
-} else {
-	var config = JSON.parse(confJson);
-}
-if (!process.argv[2]) {
-	console.log("Syntax: hockit <command> <argument>");
-	console.log("Commands: passwd <password> | domain <uri> | list | delete <hash> | up <file> | start\n");
-	console.log("passwd <password>\n\tSets the password.");
-	console.log("domain <uri>\n\tSets the FQDN or port number to bind with HTTP.");
-	console.log("list\n\tLists all uploaded files and their hashes.");
-	console.log("delete <hash>\n\tDeletes a file using it's upload hash.");
-	console.log("up <file>\n\tUploads a file and returns a shortlink hash. (Not Implemented)");
-	console.log("start\n\tStarts an HTTP server on this session.");
-	return;
-}
-const argName = process.argv[2];
-if (argName === "passwd") {
-	if (process.argv[3]) {
-		console.log("Setting new HockIt password");
-		bcrypt.hash(process.argv[3], 10, (e, hash) => {
-			config.hash = hash;
-			saveConfig(config);
-		});
-	}
-} else if (argName === "domain") {
-	if (process.argv[3]) {
-		console.log("Setting HockIt domain name to " + process.argv[3]);
-		config.fqdn = process.argv[3];
-		saveConfig(config);
-	}
-} else if (argName === "list") {
-	var list = [];
-	for (const hash in config.links) list.push("\t" + hash + " -> " + config.links[hash] + "\n");
-	console.log(list.length + " files downloadable in " + path.resolve(config.webroot + "/uploads"));
-	if (list.length > 0) console.log(list.join(""));
-} else if (argName === "delete") {
-	if (process.argv[3]) {
-		if (!(String(process.argv[3]) in config.links)) return console.log("No file found.");
-		console.log("Deleting file " + process.argv[3]);
-		fs.unlink(config.webroot + "/uploads/" + config.links[process.argv[3]], () => { });
-		fs.unlink(config.webroot + "/uploads/t-" + config.links[process.argv[3]], () => { });
-		delete config.links[process.argv[3]];
-		saveConfig(config);
-	}
-} else if (argName === "up") {
-	console.log("Not implemented yet.");
-}
-if (process.argv[2] !== "start") return;
-if (config.hash === "") return console.log("Missing password! Set up password with the \"passwd\" argument.");
-console.log("Starting HockIt server");
-try { fs.statSync(config.webroot); }
-catch (_) { fs.mkdirSync(config.webroot); }
-try { fs.statSync(config.webroot + "/uploads"); }
-catch (_) { fs.mkdirSync(config.webroot + "/uploads"); }
-function auth(req, callback) {
-	if (!("password" in req.body)) callback(null, new Error("Incorrect password!"));
-	bcrypt.compare(req.body["password"], config.hash, (err, pass) => {
-		if (pass) callback(null, true);
-		else callback(new Error("Incorrect password!"), false);
-	});
-}
-var btoa = v => Buffer.from(v).toString("base64");
-const express = require('express');
-const multer = require("multer");
-const disk = multer.diskStorage({
-	destination: (req, file, callback) => {
-		callback(null, config.webroot + "/uploads");
-	},
-	filename: (req, file, callback) => {
-		var linkHash = null;
-		do linkHash = nanoid(5);
-		while (linkHash in config.links);
-		const filename = filenamify(linkHash + "-" + file.originalname);
-		req.filename = filename;
-		req.linkHash = linkHash;
-		callback(null, filename);
-	}
-})
-const upload = multer({
-	storage: disk,
-	fileFilter: (req, file, callback) => auth(req, callback)
-});
 const nanoid = require("nanoid");
 const filenamify = require("filenamify");
 const imageThumbnail = require("image-thumbnail");
-const app = express();
-app.use(express.static(config.webroot));
-app.post("/list", upload.none(), (req, res, next) => {
-	auth(req, (err, pass) => {
-		if (!pass) {
-			res.sendStatus(401);
+function Hockit(config = null) {
+	this.homePath = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
+	this.hockitPath = this.homePath + "/.hockit";
+	try { fs.accessSync(this.hockitPath, fs.constants.F_OK | fs.constants.R_OK); }
+	catch (_) { fs.mkdirSync(this.hockitPath); }
+	if (config !== null) {
+		this.config = config;
+		return;
+	}
+	this.confPath = this.hockitPath + "/config.json";
+	this.readConfig(this.confPath);
+	if (this.config.webroot === "") this.webroot = this.homePath + "/.hockit/webroot";
+	else this.webroot = this.config.webroot;
+}
+module.exports = Hockit;
+const method = func => function (...args) {
+	args.push(this.config);
+	return func.apply(this, args);
+};
+Hockit.prototype.saveConfig = saveConfig;
+Hockit.prototype.readConfig = readConfig;
+Hockit.prototype.watchConfig = watchConfig;
+Hockit.prototype.setPassword = method(setPassword);
+Hockit.prototype.unsetPassword = method(unsetPassword);
+Hockit.prototype.up = method(addFile);
+Hockit.prototype.copy = method(copyFile);
+Hockit.prototype.delete = method(delFile);
+Hockit.prototype.list = method(getLinks);
+Hockit.prototype.find = method(getLink);
+Hockit.prototype.addToken = method(createToken);
+Hockit.prototype.revokeToken = method(revokeToken);
+Hockit.prototype.findToken = method(findToken);
+Hockit.prototype.listTokens = method(listTokens);
+Hockit.prototype.setupWebroot = method(setupWebroot);
+var confLock = false;
+function saveConfig(config) {
+	confLock = true;
+	fs.writeFileSync(this.confPath, JSON.stringify(config));
+	this.config = config;
+}
+function readConfig(confPath) {
+	var confJson = null;
+	try {
+		fs.accessSync(confPath, fs.constants.F_OK | fs.constants.R_OK);
+		confJson = fs.readFileSync(confPath).toString("utf8");
+		if (!confJson) throw new TypeError();
+		this.config = JSON.parse(confJson);
+	} catch (err) {
+		const config = {
+			webroot: this.hockitPath + "/webroot",
+			port: 8080,
+			fqdn: "",
+			sslKey: "",
+			sslCert: "",
+			links: {},
+			tokens: [],
+			hash: ""
+		};
+		this.saveConfig(config);
+	};
+}
+function watchConfig(confPath) {
+	fs.watch(confPath, { persistent: false }, type => {
+		if (type !== "change") return;
+		if (confLock) {
+			confLock = false;
 			return;
 		}
-		const links = [];
-		for (const hash in config.links) {
-			links.push({
-				name: config.links[hash].slice(config.links[hash].indexOf("-") + 1),
-				hash: hash,
-				thumb: "t-" + config.links[hash]
-			});
-		}
-		res.redirect("uploads?list=" + encodeURIComponent(btoa(JSON.stringify(links))));
+		readConfig(confPath);
 	});
-});
-app.post("/upload",
-	upload.single("upload"),
-	(req, res, next) => {
-		const path = config.webroot + "/uploads/" + req.filename;
-		try {
-			if (req.body.image) {
-				imageThumbnail(path, {
-					width: 256,
-					height: 256
-				}).then(buf => fs.writeFile(config.webroot + "/uploads/t-" + req.filename, buf, () => { }));
+}
+function setPassword(password, config) {
+	bcrypt.hash(password, 10, (e, hash) => {
+		config.hash = hash;
+		this.saveConfig(config);
+	});
+}
+function unsetPassword(config) {
+	config.hash = "";
+	this.saveConfig(config);
+}
+function setupWebroot(config) {
+	const webroot = this.webroot;
+	try { fs.accessSync(webroot, fs.constants.F_OK | fs.constants.R_OK); }
+	catch (err) { fs.mkdirSync(webroot, { recursive: true }); }
+	try { fs.accessSync(webroot + "/index.html", fs.constants.F_OK | fs.constants.R_OK); }
+	catch (_) { fs.copyFileSync(__dirname + "/webroot/index.html", webroot + "/index.html"); }
+	try { fs.accessSync(webroot + "/uploads", fs.constants.F_OK | fs.constants.R_OK); }
+	catch (_) { fs.mkdirSync(webroot + "/uploads"); }
+	try { fs.accessSync(webroot + "/uploads/index.html", fs.constants.F_OK | fs.constants.R_OK); }
+	catch (_) { fs.copyFileSync(__dirname + "/webroot/uploads/index.html", webroot + "/uploads/index.html"); }
+	try { fs.accessSync(webroot + "/themes", fs.constants.F_OK | fs.constants.R_OK); }
+	catch (_) { fs.mkdirSync(webroot + "/themes"); }
+	const files = fs.readdirSync(__dirname + "/webroot/themes");
+	for (const file of files) {
+		try { fs.accessSync(webroot + "/themes/" + file, fs.constants.F_OK | fs.constants.R_OK); }
+		catch (_) { fs.copyFileSync(__dirname + "/webroot/themes/" + file, webroot + "/themes/" + file); }
+	}
+}
+function getHash(config) {
+	var hash = null;
+	do hash = nanoid(5);
+	while (hash in config.links);
+	return hash;
+}
+function copyFile(path, config) {
+	const hash = getHash(config);
+	const name = path.slice(path.lastIndexOf("/") + 1);
+	const filename = filenamify(hash + "." + name);
+	fs.copyFileSync(path, this.webroot + "/uploads/" + filename);
+	imageThumbnail(path, {
+		width: 256,
+		height: 256
+	}).then(buf => fs.writeFile(this.webroot + "/uploads/t-" + filename, buf, () => { })).catch(() => { });
+	config.links[hash] = {
+		name: name,
+		hash: hash
+	};
+	this.saveConfig(config);
+	return hash;
+}
+function addFile(buf, name, config) {
+	const hash = getHash(config);
+	const filename = filenamify(hash + "." + name);
+	return new Promise((resolve, reject) => {
+		const path = this.webroot + "/uploads";
+		fs.writeFile(path + "/" + filename, buf, (err) => {
+			if (err) {
+				reject(err);
+				return;
 			}
-			config.links[req.linkHash] = req.filename;
-			saveConfig(config);
-			res.redirect("uploads?list=" + encodeURIComponent(btoa(JSON.stringify([{
-				name: req.file.originalname,
-				hash: req.linkHash,
-				thumb: req.body.image ? "t-" + req.filename : "/file-download-outline.png"
-			}]))));
-		} catch (error) {
-			console.error(error);
-			res.sendStatus(500);
-		}
+			imageThumbnail(buf, {
+				width: 256,
+				height: 256
+			}).then(buf => fs.writeFile(path + "/t-" + filename, buf, () => { })).catch(() => { }).then(() => {
+				config.links[hash] = {
+					name: name,
+					hash: hash
+				};
+				this.saveConfig(config);
+				resolve(hash);;
+			});
+		});
 	});
-app.get('/:id', (req, res) => {
-	if (req.params.id in config.links) res.sendFile("uploads/" + config.links[req.params.id], {
-		root: config.webroot
+}
+function delFile(hash, config) {
+	return new Promise((resolve, reject) => {
+		if (!(hash in config.links)) reject(404);
+		const link = config.links[hash];
+		const fileName = hash + "." + link.name;
+		fs.unlink(this.webroot + "/uploads/" + fileName, err => {
+			if (err) {
+				if (err.code === "ENOENT") {
+					delete config.links[hash];
+					this.saveConfig(config);
+					return resolve();
+				}
+				return reject(err);
+			}
+			fs.unlink(this.webroot + "/uploads/t-" + fileName, (err) => { });
+			delete config.links[hash];
+			this.saveConfig(config);
+			resolve();
+		});
 	});
-	else res.sendStatus(404);
-});
-app.use(function (err, req, res, next) {
-	res.status(500).send(err.message);
-});
-app.listen(config.fqdn ? config.fqdn : 8080);
+}
+function getLink(hash, config) {
+	if (typeof hash !== "string" || !(hash in config.links)) return {
+		files: [],
+		total: 0
+	};
+	return {
+		files: [config.links[hash]],
+		total: Object.keys(config.links).length
+	};
+}
+function getLinks(config) {
+	const links = [];
+	for (const hash in config.links) {
+		links.push({
+			name: config.links[hash].name,
+			hash: hash
+		});
+	}
+	return {
+		files: links,
+		total: Object.keys(config.links).length
+	};
+}
+function findToken(name, config) {
+	const token = config.tokens.find(pair => pair[0] === name);
+	return (typeof token !== "undefined") ? token : null;
+}
+function listTokens(config) {
+	return [].concat(config.tokens);
+}
+function revokeToken(name, config) {
+	config.tokens.splice(config.tokens.findIndex(pair => pair[0] === name), 1);
+	this.saveConfig(config);
+}
+function createToken(name, config) {
+	return new Promise((resolve, reject) => {
+		bcrypt.genSalt(10, (e, token) => {
+			if (e) throw e;
+			config.tokens.push([
+				name,
+				token
+			]);
+			this.saveConfig(config);
+			resolve(token);
+		});
+	});
+}

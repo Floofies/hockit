@@ -1,0 +1,80 @@
+html {
+	background-color: #ffffee;
+}
+body {
+	background: linear-gradient(#fed6af 1%,#ffffee 18% 100%);
+	background-repeat: no-repeat;
+	font-family: sans-serif;
+	color:#800;
+}
+h1,
+h2,
+h3,
+h4 {
+	color: maroon;
+	font-family: sans-serif;
+	font-weight: bold;
+}
+a, a:visited {
+	color:#00e;
+	font-family: sans-serif;
+}
+a:hover {
+	color:#e00;
+}
+.uploadBox {
+	background-color: white;
+	border: 1px solid 1px solid #d9bfb7;
+	box-shadow: 2px 2px 6px black;
+}
+.topRow {
+	border-bottom:1px solid #d9bfb7;
+}
+.controlBtn:active {
+	background-color: maroon;
+	opacity:1;
+}
+.list {
+	border-bottom:1px solid #d9bfb7;
+}
+.item {
+	color: white;
+	box-shadow: none;
+	background-color: #f0e0d6;
+	border: 1px solid #d9bfb7;
+	border-left:none;
+	border-top:none;
+}
+.listView .item {
+	border-left:1px solid #d9bfb7;
+	background-color:#fff;
+}
+img[src="/themes/file-download-outline.png"] {
+	opacity:0.3;
+}
+img[src="/themes/file-download-outline.png"]:hover {
+	opacity:1;
+}
+.copy {
+	opacity:0.3;
+}
+.copy:hover {
+	opacity:1;
+}
+.copy:active {
+	border-radius: 90px;
+	opacity:1;
+	background:maroon;
+}
+.delBtn {
+	opacity:0.3;
+	width:1.7em;
+}
+.delBtn:hover {
+	opacity:1;
+}
+.delBtn:active {
+	opacity:1;
+	border-radius: 90px;
+	background:maroon;
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>HockIt</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link id="themeLink" rel="stylesheet" href="/themes/default.css">
+	<script type="text/javascript" src="/themes/theme.js"></script>
+	<script type="text/javascript">
+		window.addEventListener("load", () => {
+			const file = document.getElementById("file");
+			const button = document.getElementById("button");
+			const form = document.getElementById("form");
+			file.addEventListener("change", () => {
+				if (file.files.length > 0) {
+					button.setAttribute("value", "Hock it up!");
+					form.setAttribute("action", "/up");
+				} else {
+					button.setAttribute("value", "List Files");
+					form.setAttribute("action", "/list");
+				}
+			});
+		});
+	</script>
+</head>
+
+<body>
+	<h1 id="heading" class="heading hup">hockit up</h1>
+	<div class="uploadBox">
+		<form id="form" action="/list" enctype="multipart/form-data" method="post">
+			<input id="file" type="file" name="upload">
+			<br>
+			<label for="password">Password:</label>
+			<input type="password" name="password" autocomplete="current-password" value="">
+			<br>
+			<input id="button" type="submit" value="List Files">
+		</form>
+	</div>
+	<div class="footer">
+		<label class="themeList" for="theme">Theme:</label>
+		<select class="themeList" name="theme" id="themeList">
+			<option value="default" selected>Default</option>
+			<option value="dark">Dark</option>
+			<option value="terminal">Terminal</option>
+			<option value="booru">Booru</option>
+		</select>
+		<h4>v2.0.0</h4>
+	</div>
+	<div id="textBox" class="box hidden"></div>
+</body>
+
+</html>

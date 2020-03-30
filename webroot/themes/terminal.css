@@ -1,0 +1,116 @@
+body {
+	background-color:#1a1a1a;
+	font-family: 'Consolas', Courier, monospace;
+	color:white;
+}
+h1,
+h2,
+h3,
+h4 {
+	color: white;
+	font-family: 'Consolas', Courier, monospace;
+}
+h1::before {
+	content: "$ ";
+	display: inline-block;
+}
+h1::after {
+	content: "";
+	display: inline-block;
+	background-color: white;
+	width: 10px;
+	margin-left: 5px;
+	height: 2px;
+	-webkit-animation: blink 1s step-end infinite;
+	animation: blink 1s step-end infinite;
+}
+@-webkit-keyframes blink {
+	0% {
+		opacity: 1.0;
+	}
+
+	50% {
+		opacity: 0.0;
+	}
+
+	100% {
+		opacity: 1.0;
+	}
+}
+@keyframes blink {
+	0% {
+		opacity: 1.0;
+	}
+
+	50% {
+		opacity: 0.0;
+	}
+
+	100% {
+		opacity: 1.0;
+	}
+}
+a {
+	color:white;
+	font-family: 'Consolas', Courier, monospace;
+	font-weight:lighter;
+}
+a:hover {
+	color:white;
+	text-shadow: 1px 1px 1px white;
+}
+.uploadBox {
+	background-color: #292929;
+	border: none;
+	box-shadow: none;
+}
+.topRow {
+	border-bottom:1px solid #9f9f9f;
+}
+.controlBtn {
+	filter:none;
+}
+.controlBtn:active {
+	opacity:1;
+}
+.list {
+	border-bottom:1px solid #9f9f9f;
+}
+.item {
+	color: white;
+	font-weight:bold;
+	box-shadow: none;
+	background-color: #292929;
+	border: 1px solid #1a1a1a;
+}
+img[src="/themes/file-download-outline.png"] {
+	opacity:0.3;
+}
+img[src="/themes/file-download-outline.png"]:hover {
+	opacity:1;
+}
+.copy {
+	opacity:0.3;
+	filter:none;
+}
+.copy:hover {
+	opacity:1;
+}
+.copy:active {
+	border-radius: 90px;
+	opacity:1;
+	background:rgba(0,0,0, 1);
+}
+.delBtn {
+	filter:none;
+	opacity:0.3;
+	width:1.7em;
+}
+.delBtn:hover {
+	opacity:1;
+}
+.delBtn:active {
+	opacity:1;
+	border-radius: 90px;
+	background:black;
+}

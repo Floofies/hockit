@@ -1,0 +1,338 @@
+html {
+	margin: 0;
+	height:100vh;
+}
+body {
+	margin: 0;
+	text-align: center;
+	background-color: #e7e7e7;
+	display: flex;
+	flex-flow: column;
+	align-items: center;
+	justify-content: center;
+	font-family: sans-serif;
+	color:black;
+	padding:0px;
+	min-height:100vh;
+	font-size:calc(12px + 0.4vmax);
+	line-height:calc(20px + 0.4vmax);
+}
+h1,
+h2,
+h3,
+h4 {
+	user-select: none;
+	color: black;
+	font-family: sans-serif;
+	font-weight:lighter;
+	margin:0px;
+}
+h1 {
+	margin-top:0.5em;
+	margin-bottom:0.5em;
+
+}
+a {
+	color:rgb(0, 132, 255);
+	font-family: sans-serif;
+}
+a:hover {
+	color:rgb(132, 0, 255);
+}
+form {
+	font-size:1em;
+}
+input {
+	margin-top:10px;
+	font-size:1em;
+}
+button {
+	user-select: none;
+	margin-top:10px;
+	font-size:1em;
+	cursor: pointer;
+	user-select: none;
+}
+.main {
+	max-width:60vw;
+	min-height:100vh;
+	width:100%;
+	font-size:1em;
+}
+@media screen and (max-width: 2040px) {
+	.main {
+		max-width:60vw;
+	}
+
+}
+@media screen and (max-width: 1350px) {
+	.main {
+		max-width:80vw;
+	}
+
+}
+@media screen and (max-width: 850px) {
+	.main {
+		max-width:90vw;
+	}
+
+}
+@media screen and (max-width: 750px) {
+	.main {
+		max-width:100vw;
+	}
+
+}
+.uploadBox {
+	padding:25px;
+	background-color: white;
+	border: 1px solid #d6d6d6;
+	box-shadow: 2px 3px 6px dimgrey;
+	margin-bottom:20px;
+}
+.topRow {
+	user-select: none;
+	text-align: left;
+	border-bottom:1px solid #d6d6d6;
+	width:calc(100% - 20px);
+	min-width:10em;
+	display:flex;
+	flex-flow:row;
+	justify-content: space-between;
+	align-items: center;
+	padding-left:10px;
+	padding-right:10px;
+}
+.total {
+	height:1em;
+	user-select: none;
+	padding-right:0.3em;
+}
+.pageButtons {
+	display:flex;
+	flex-flow: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: space-between;
+}
+.controlBtn {
+	padding:5px;
+	width:1.5em;
+	display:inline-block;
+	cursor:pointer;
+	opacity:0.3;
+	filter:invert();
+}
+.selectedBtn {
+	opacity:1;
+}
+.controlBtn:hover {
+	opacity:1;
+}
+.controlBtn:active {
+	border-radius: 90px;
+	opacity:1;
+	filter:none;
+	background:rgba(0,0,0, 1);
+}
+.list {
+	font-size: 1em;
+	line-height: 1em;
+	margin: 0;
+	padding:10px;
+	display: flex;
+	border-bottom:1px solid #d6d6d6;
+	margin-bottom:25px;
+	min-height:calc(100vh - 17em);
+	align-content: flex-start;
+}
+.gridView {
+	text-align: center;
+	flex-flow: row;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+}
+.listView {
+	text-align: left;
+	flex-flow: column;
+	flex-wrap: nowrap;
+}
+.item {
+	padding: 0.3em;
+	display: flex;
+	flex-flow: column;
+	justify-content:flex-end;
+	color: black;
+	box-shadow: 2px 3px 6px dimgrey;
+	background-color: white;
+	border: 1px solid #d6d6d6;
+	margin:5px;
+	width:8em;
+}
+.largeThumbs.gridView.list .item {
+	font-size:2em;
+}
+.largeThumbs.listView.list .item {
+	font-size:2em;
+}
+.largeThumbs.gridView.list .item .thumb {
+	max-width:none;
+	width:8em;
+}
+.largeThumbs.list .item .name {
+	font-size:0.5em;
+}
+.largeThumbs.list .item .link {
+	font-size:0.5em;
+}
+.listView .item {
+	padding:5px;
+	margin:0px;
+	width:calc(100% - 11px);
+	height:2em;
+	max-width:100%;
+	flex-flow: row;
+	align-items: center;
+	justify-content: space-between;
+}
+.thumb {
+	user-select: none;
+	pointer-events:none;
+	object-fit:contain;
+	max-height:8em;
+	max-width:8em;
+	height:auto;
+	width:auto;
+}
+.listView .thumb {
+	max-height:2em;
+	max-width:2em;
+	justify-self: flex-start;
+}
+.thumbLink {
+	height:8em;
+	width:8em;
+	display:flex;
+	flex-flow:column;
+	justify-content: center;
+	align-items: center;
+}
+.listView .thumbLink {
+	height:auto;
+	width:auto;
+	min-width:2em;
+	flex-flow:row;
+}
+img[src="/themes/file-download-outline.png"] {
+	opacity:0.3;
+	filter:invert();
+}
+img[src="/themes/file-download-outline.png"]:hover {
+	opacity:1;
+}
+.name {
+	width:100%;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	text-align: center;
+	text-decoration: none;
+}
+.gridView .name:before {
+	float: right;
+	content: attr(data-tail);
+}
+.gridView .name {
+	font-size:1em;
+	line-height: 1.2em;
+	padding-top:5px;
+	text-align:center;
+}
+.listView .name {
+	direction: rtl;
+	line-height: 1.2em;
+	max-width:none;
+	padding-left:0.3em;
+	text-align:left;
+}
+.link {
+	min-width:7em;
+	display:flex;
+	flex-flow:row;
+	justify-content: space-around;
+	align-items: center;
+}
+.link a {
+	text-decoration: none;
+	font-family: 'Consolas', Courier, monospace;
+}
+.link a:hover {
+	text-decoration: underline;
+}
+.listView .link {
+	justify-content: space-between;
+}
+.copy {
+	user-select: none;
+	padding:5px;
+	width:1.5em;
+	display:inline-block;
+	cursor:pointer;
+	opacity:0.3;
+	filter:invert();
+}
+.copy:hover {
+	opacity:1;
+}
+.copy:active {
+	border-radius: 90px;
+	opacity:1;
+	filter:none;
+	background:rgba(0,0,0, 1);
+}
+.delBtn {
+	user-select: none;
+	opacity:0.3;
+	width:1.7em;
+	display:inline-block;
+	cursor:pointer;
+	filter:invert();
+}
+.delBtn:hover {
+	opacity:1;
+}
+.delBtn:active {
+	opacity:1;
+	filter:none;
+	border-radius: 90px;
+	background:black;
+}
+.pwForm {
+	word-wrap: none;
+}
+.box {
+	user-select: none;
+	top:0px;
+	position:absolute;
+	display:inline;
+	background-color:rgba(0,0,0, 0.8);
+	box-shadow: 2px 3px 6px black;
+	color:white;
+	font-size:2em;
+	padding:25px;
+}
+.footer {
+	user-select: none;
+	display:block;
+	width:100%;
+	left:0px;
+	bottom:0px;
+	height:3em;
+}
+.hidden {
+	display:none;
+}
+.flip {
+	transform:rotate(180deg);
+}

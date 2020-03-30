@@ -1,0 +1,74 @@
+body {
+	background-color: #21252b;
+	font-family: sans-serif;
+	color:white;
+}
+h1,
+h2,
+h3,
+h4 {
+	color: #e06c75;
+	font-family: sans-serif;
+	font-weight:lighter;
+}
+a {
+	color:#98c379;
+	font-family: sans-serif;
+}
+a:hover {
+	color:#c7ecac;
+}
+.uploadBox {
+	background-color: #282c34;
+	border: 1px solid #373c46;
+	box-shadow: 2px 2px 6px black;
+}
+.topRow {
+	border-bottom:1px solid #373c46;
+}
+.controlBtn {
+	filter:none;
+}
+.controlBtn:active {
+	opacity:1;
+}
+.list {
+	border-bottom:1px solid #373c46;
+}
+.item {
+	color: white;
+	box-shadow: 2px 3px 6px black;
+	background-color: #282c34;
+	border: 1px solid #373c46;
+}
+img[src="/themes/file-download-outline.png"] {
+	opacity:0.3;
+}
+img[src="/themes/file-download-outline.png"]:hover {
+	opacity:1;
+}
+.copy {
+	opacity:0.3;
+	filter:none;
+}
+.copy:hover {
+	opacity:1;
+}
+.copy:active {
+	border-radius: 90px;
+	opacity:1;
+	background:rgba(0,0,0, 1);
+}
+.delBtn {
+	filter:none;
+	opacity:0.3;
+	width:1.7em;
+}
+.delBtn:hover {
+	opacity:1;
+}
+.delBtn:active {
+	opacity:1;
+	border-radius: 90px;
+	background:black;
+}
