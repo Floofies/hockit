@@ -13,7 +13,7 @@ Install the package globally to use the `hockit` command:
 npm i -g hockit
 ```
 
-Configure a password and webroot for hockit:
+Configure a password and port for hockit:
 
 ```
 $ hockit passwd ChangeThisPassword
@@ -21,9 +21,6 @@ Setting new HockIt password
 $ hockit port 8080
 Setting HockIt port to 8080
 $ hockit domain my.website.com
-Setting HockIt domain name to my.website.com
-$ hockit webroot /var/www
-Setting HockIt webroot path to /var/www
 ```
 
 Start the HTTP server:
