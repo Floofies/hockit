@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const fs = require('fs');
-const nanoid = require("nanoid");
+const nanoid = require("nanoid").nanoid;
 const filenamify = require("filenamify");
 const imageThumbnail = require("image-thumbnail");
 function Hockit(config = null) {
