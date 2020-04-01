@@ -119,7 +119,7 @@ function makeApp(hockit) {
 		(req, res) => {
 			const hash = req.params.id;
 			const links = hockit.find(hash);
-			if (links.total === 0) {
+			if (links.files.length === 0) {
 				res.sendStatus(404);
 				return;
 			}
