@@ -6,6 +6,17 @@ const imageThumbnail = require("image-thumbnail");
 function Hockit(config = null) {
 	this.homePath = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 	this.hockitPath = this.homePath + "/.hockit";
+	this.defaultConfig = {
+		webroot: this.hockitPath + "/webroot",
+		port: 8080,
+		fqdn: "",
+		sslKey: "",
+		sslCert: "",
+		sslPass: "",
+		links: {},
+		tokens: [],
+		hash: ""
+	};
 	try { fs.accessSync(this.hockitPath, fs.constants.F_OK | fs.constants.R_OK); }
 	catch (_) { fs.mkdirSync(this.hockitPath); }
 	if (config !== null) {
@@ -23,6 +34,7 @@ const method = func => function (...args) {
 	return func.apply(this, args);
 };
 Hockit.prototype.saveConfig = saveConfig;
+Hockit.prototype.resetConfig = resetConfig;
 Hockit.prototype.readConfig = readConfig;
 Hockit.prototype.watchConfig = watchConfig;
 Hockit.prototype.setPassword = method(setPassword);
@@ -37,11 +49,15 @@ Hockit.prototype.revokeToken = method(revokeToken);
 Hockit.prototype.findToken = method(findToken);
 Hockit.prototype.listTokens = method(listTokens);
 Hockit.prototype.setupWebroot = method(setupWebroot);
+Hockit.prototype.startServer = method(startServer);
 var confLock = false;
 function saveConfig(config) {
 	confLock = true;
 	fs.writeFileSync(this.confPath, JSON.stringify(config));
 	this.config = config;
+}
+function resetConfig() {
+	this.saveConfig(Object.assign({}, this.defaultConfig));
 }
 function readConfig(confPath) {
 	var confJson = null;
@@ -50,19 +66,20 @@ function readConfig(confPath) {
 		confJson = fs.readFileSync(confPath).toString("utf8");
 		if (!confJson) throw new TypeError();
 		this.config = JSON.parse(confJson);
+		const keys = Object.keys(this.config);
+		var missingKey = false;
+		Object.keys(this.defaultConfig).forEach(key => {
+			if (!keys.includes(key)) {
+				this.config[key] = this.defaultConfig[key];
+				missingKey = true;
+			}
+		});
+		if (missingKey) this.saveConfig(this.config);
 	} catch (err) {
-		const config = {
-			webroot: this.hockitPath + "/webroot",
-			port: 8080,
-			fqdn: "",
-			sslKey: "",
-			sslCert: "",
-			links: {},
-			tokens: [],
-			hash: ""
-		};
-		this.saveConfig(config);
+		if (err.code === "ENOENT") this.resetConfig();
+		else throw err;
 	};
+	this.ssl = (this.config.sslCert !== "" && this.config.sslKey !== "");
 }
 function watchConfig(confPath) {
 	fs.watch(confPath, { persistent: false }, type => {
@@ -119,7 +136,8 @@ function copyFile(path, config) {
 	}).then(buf => fs.writeFile(this.webroot + "/uploads/t-" + filename, buf, () => { })).catch(() => { });
 	config.links[hash] = {
 		name: name,
-		hash: hash
+		hash: hash,
+		date: Date.now()
 	};
 	this.saveConfig(config);
 	return hash;
@@ -140,7 +158,8 @@ function addFile(buf, name, config) {
 			}).then(buf => fs.writeFile(path + "/t-" + filename, buf, () => { })).catch(() => { }).then(() => {
 				config.links[hash] = {
 					name: name,
-					hash: hash
+					hash: hash,
+					date: Date.now()
 				};
 				this.saveConfig(config);
 				resolve(hash);;
@@ -172,7 +191,7 @@ function delFile(hash, config) {
 function getLink(hash, config) {
 	if (typeof hash !== "string" || !(hash in config.links)) return {
 		files: [],
-		total: 0
+		total: Object.keys(config.links).length
 	};
 	return {
 		files: [config.links[hash]],
@@ -184,7 +203,8 @@ function getLinks(config) {
 	for (const hash in config.links) {
 		links.push({
 			name: config.links[hash].name,
-			hash: hash
+			hash: hash,
+			date: config.links[hash].date
 		});
 	}
 	return {
@@ -215,4 +235,7 @@ function createToken(name, config) {
 			resolve(token);
 		});
 	});
+}
+function startServer() {
+	return require(__dirname + "/src/httpd.js")(this);
 }

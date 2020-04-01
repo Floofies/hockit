@@ -4,7 +4,7 @@
 <head>
 	<title>HockIt</title>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
 	<link id="themeLink" rel="stylesheet" href="../themes/default.css">
 	<script type="text/javascript">
 		function getHash() {
@@ -69,7 +69,11 @@
 			pageInput.value = page;
 			if (files.length === 1) heading.textContent = "hockit list " + files[0].hash;
 			totalCounter.textContent = files.length + " of " + total + " Files, Page " + (page + 1) + " of " + totalPages;
+			var newView = window.localStorage.getItem("view");
+			var curView = "grid";
 			function setGrid() {
+				if (curView === "grid") return;
+				curView = "grid";
 				list.classList.remove("listView");
 				list.classList.add("gridView");
 				window.localStorage.setItem("view", "grid");
@@ -77,6 +81,8 @@
 				viewListBtn.classList.remove("selectedBtn");
 			}
 			function setList() {
+				if (curView === "list") return;
+				curView = "list";
 				list.classList.remove("gridView");
 				list.classList.add("listView");
 				window.localStorage.setItem("view", "list");
@@ -92,7 +98,6 @@
 				const nodes = Array.from(list.childNodes).sort(() => -1);
 				while (list.hasChildNodes()) list.removeChild(list.lastChild);
 				for (const node of nodes) list.appendChild(node);
-				truncate();
 			}
 			var size = "Small";
 			function setSize() {
@@ -102,6 +107,7 @@
 				viewSizeBtn.setAttribute("src", "/themes/image-size-select-" + opposite.toLowerCase() + ".png");
 				viewSizeBtn.setAttribute("title", "Show " + opposite + " Thumbnails");
 				list.classList.toggle("largeThumbs", size === "Large");
+				window.setTimeout(truncate, 100);
 			}
 			viewListBtn.addEventListener("click", setList);
 			viewGridBtn.addEventListener("click", setGrid);
@@ -171,6 +177,14 @@
 				link.setAttribute("href", "/" + file.hash);
 				link.setAttribute("title", file.hash);
 				link.textContent = file.hash;
+				const date = templ.querySelector("[name=date]");
+				const fileDate = new Date(file.date);
+				const year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(fileDate);
+				const month = new Intl.DateTimeFormat('en', { month: 'short' }).format(fileDate);
+				const day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(fileDate);
+				dateStr = month + " " + day + "\n" + year;
+				date.textContent = dateStr;
+				date.setAttribute("title", dateStr);
 				const name = templ.querySelector("[name=name]");
 				name.textContent = file.name;
 				name.setAttribute("title", file.name);
@@ -179,9 +193,7 @@
 				copyBtn.addEventListener("click", () => {
 					const url = "http://" + window.location.hostname + "/" + file.hash;
 					copy(url);
-					textBox.textContent = "Copied " + url;
-					textBox.classList.remove("hidden");
-					window.setTimeout(() => textBox.classList.add("hidden"), 5000);
+					flash("Copied " + url);
 				});
 				const delBtn = templ.querySelector("[name=delBtn]");
 				delBtn.addEventListener("click", () => {
@@ -199,11 +211,9 @@
 						node.dataset.tail = node.textContent.slice(node.textContent.length - 8);
 					}
 				});
-				var curView = window.localStorage.getItem("view");
-				if (typeof curView === "undefined") curView = "grid";
-				if (curView === "list") setList();
 			}
-			truncate();
+			if (newView === "list") setList();
+			else truncate();
 		});
 	</script>
 	<script type="text/javascript" src="../themes/theme.js"></script>
@@ -212,6 +222,7 @@
 <body>
 	<template id="itemTemplate">
 		<div class="item">
+			<div class="date" name="date"></div>
 			<a class="thumbLink" name="thumbLink" href="">
 				<img name="thumb" class="thumb" src="">
 			</a>

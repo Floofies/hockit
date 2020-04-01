@@ -1,6 +1,7 @@
 html {
 	margin: 0;
 	height:100vh;
+	user-select: none;
 }
 body {
 	margin: 0;
@@ -47,11 +48,9 @@ input {
 	font-size:1em;
 }
 button {
-	user-select: none;
 	margin-top:10px;
 	font-size:1em;
 	cursor: pointer;
-	user-select: none;
 }
 .main {
 	max-width:60vw;
@@ -75,7 +74,6 @@ button {
 	.main {
 		max-width:90vw;
 	}
-
 }
 @media screen and (max-width: 750px) {
 	.main {
@@ -91,7 +89,6 @@ button {
 	margin-bottom:20px;
 }
 .topRow {
-	user-select: none;
 	text-align: left;
 	border-bottom:1px solid #d6d6d6;
 	width:calc(100% - 20px);
@@ -105,7 +102,6 @@ button {
 }
 .total {
 	height:1em;
-	user-select: none;
 	padding-right:0.3em;
 }
 .pageButtons {
@@ -180,6 +176,9 @@ button {
 	max-width:none;
 	width:8em;
 }
+.largeThumbs.list .item .date {
+	font-size:0.2em;
+}
 .largeThumbs.list .item .name {
 	font-size:0.5em;
 }
@@ -197,7 +196,6 @@ button {
 	justify-content: space-between;
 }
 .thumb {
-	user-select: none;
 	pointer-events:none;
 	object-fit:contain;
 	max-height:8em;
@@ -230,6 +228,16 @@ img[src="/themes/file-download-outline.png"] {
 }
 img[src="/themes/file-download-outline.png"]:hover {
 	opacity:1;
+}
+.date {
+	line-height:1em;
+	font-size:0.5em;
+	font-family: 'Consolas', Courier, monospace;
+	padding-bottom:0.3em;
+}
+.listView .date {
+	line-height: 2em;
+	padding:0px;
 }
 .name {
 	width:100%;
@@ -274,7 +282,6 @@ img[src="/themes/file-download-outline.png"]:hover {
 	justify-content: space-between;
 }
 .copy {
-	user-select: none;
 	padding:5px;
 	width:1.5em;
 	display:inline-block;
@@ -292,7 +299,6 @@ img[src="/themes/file-download-outline.png"]:hover {
 	background:rgba(0,0,0, 1);
 }
 .delBtn {
-	user-select: none;
 	opacity:0.3;
 	width:1.7em;
 	display:inline-block;
@@ -312,7 +318,6 @@ img[src="/themes/file-download-outline.png"]:hover {
 	word-wrap: none;
 }
 .box {
-	user-select: none;
 	top:0px;
 	position:absolute;
 	display:inline;
@@ -323,7 +328,6 @@ img[src="/themes/file-download-outline.png"]:hover {
 	padding:25px;
 }
 .footer {
-	user-select: none;
 	display:block;
 	width:100%;
 	left:0px;

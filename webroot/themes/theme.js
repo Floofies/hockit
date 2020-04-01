@@ -7,13 +7,15 @@ window.addEventListener("load", function () {
 	}
 	const query = getQueryString();
 	const heading = document.getElementById("heading");
+	window.flash = function (str) {
+		const origText = heading.textContent;
+		heading.textContent = str;
+		window.setTimeout(() => heading.textContent = origText, 10000);
+	};
 	if (query !== null && "data" in query) {
 		const config = JSON.parse(atob(query.data));
 		if (config.text !== "") {
-			const origText = heading.textContent;
-			heading.textContent = config.text;
-			heading.classList.remove("hidden");
-			window.setTimeout(() => heading.textContent = origText, 10000);
+			window.flash(config.text);
 		}
 	}
 	// Dynamically loads a CSS Stylesheet from a URL.
@@ -32,7 +34,7 @@ window.addEventListener("load", function () {
 		"dark",
 		"terminal",
 		"booru"
-	]
+	];
 	const themeList = document.querySelector("#themeList");
 	window.setHockitTheme = function (theme) {
 		if (theme === currentTheme) return;
@@ -43,8 +45,5 @@ window.addEventListener("load", function () {
 	};
 	const theme = window.localStorage.getItem("theme");
 	if (theme !== null) setHockitTheme(theme);
-	themeList.addEventListener("change", () => {
-		const theme = themeList.value;
-		setHockitTheme(theme);
-	});
+	themeList.addEventListener("change", () => setHockitTheme(themeList.value));
 });

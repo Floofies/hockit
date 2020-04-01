@@ -28,60 +28,104 @@ if (process.argv.length >= 4) var arg = process.argv[3];
 else var arg = null;
 if (process.argv.length >= 5) var arg2 = process.argv[4];
 else var arg2 = null;
-if (argName === null || argName === "help") {
-	if (tty) helpPage();
+if (tty && (argName === null || argName === "help")) {
+	helpPage();
 	return;
 }
 const resolvePath = require('path').resolve;
-if (argName === "start") {
-	if (tty) console.log("Starting HockIt server");
-	var server = require(__dirname + "/../src/httpd.js");
-	var hockit = server.hockit;
-	if (tty) {
-		const readline = require("readline");
-		const splitter = require("argv-split");
-		const input = readline.createInterface({
-			input: process.stdin,
-			output: process.stdout
-		});
-		input.on("line", str => {
-			const args = splitter(str);
-			args.unshift(hockit);
-			args.unshift(server);
-			reactor.apply(null, args);
-			process.stdout.write("> ");
-		});
-		process.stdout.write("> ");
-	}
-	return;
-} else {
-	var Hockit = require(__dirname + "/../index.js");
-	var hockit = new Hockit();
-	var server = null;
-	reactor(server, hockit, argName, arg, arg2);
+const Hockit = require(__dirname + "/../index.js");
+const hockit = new Hockit();
+const readline = require("readline");
+if (tty) {
+	var Writable = require("stream").Writable;
+	var mutedStdOut = new Writable({
+		write: function (chunk, encoding, callback) {
+			if (!this.muted) process.stdout.write(chunk, encoding);
+			callback();
+		}
+	});
+	mutedStdOut.muted = false;
+	var ttyInput = readline.createInterface({
+		input: process.stdin,
+		output: mutedStdOut,
+		terminal: true
+	});
 }
+var startedServer = false;
+var prompting = false;
+reactor(null, hockit, argName, arg, arg2);
+if (tty && !startedServer && !prompting) ttyInput.close();
 function reactor(server, hockit, argName, arg = null, arg2 = null) {
 	if (argName === "exit") process.exit(0);
 	if (argName === "help") {
 		helpPage();
 		return;
 	}
-	if (argName === "config") {
-		if (tty && hockit.config.hash === "") console.warn("WARNING: Missing password; the web GUI will not work until you set a password with \"hockit passwd\"");
-		if (tty) console.log("Current HockIt Configuration:");
-		const table = {
-			"WebRoot": (hockit.config.webroot === "") ? "Not Set. Default: " + hockit.webroot : hockit.config.webroot,
-			"HTTP Port": hockit.config.port,
-			"Domain Name": (hockit.config.fqdn === "") ? "Not Set" : hockit.config.fqdn,
-			"SSL Key": (hockit.config.sslKey === "") ? "Not Set" : hockit.config.sslKey,
-			"SSL Cert": (hockit.config.sslCert === "") ? "Not Set" : hockit.config.sslCert,
-			"Password": (hockit.config.hash === "") ? "Not Set" : "Set",
-			"Total Files": Object.keys(hockit.config.links).length,
-			"Total API Tokens": Object.keys(hockit.config.tokens).length
-		};
-		if (tty) console.table(table);
-		else out(JSON.stringify(table));
+	if (!startedServer && argName === "start") {
+		if (tty) console.log("Starting HockIt server");
+		startedServer = true;
+		const server = hockit.startServer();
+		if (!tty) return;
+		const splitter = require("argv-split");
+		ttyInput.on("line", str => {
+			if (prompting) {
+				prompting = false;
+				return;
+			}
+			const args = splitter(str);
+			args.unshift(hockit);
+			args.unshift(server);
+			reactor.apply(null, args);
+			if (prompting) {
+				return;
+			}
+			process.stdout.write("> ");
+		});
+		process.stdout.write("> ");
 		return;
+	}
+	function getPass() {
+		prompting = true;
+		return new Promise((resolve, reject) => {
+			mutedStdOut.muted = true;
+			process.stdout.write("\nNew Passphrase:");
+			ttyInput.question("", str => {
+				str = str.trim();
+				mutedStdOut.muted = false;
+				if (str === "") reject("No passphrase was supplied.");
+				else resolve(str);
+				if (startedServer) process.stdout.write("\n> ");
+				prompting = false;
+			});
+		});
+	}
+	if (argName === "config") {
+		if (arg === null) {
+			if (tty && hockit.config.hash === "") console.warn("WARNING: Missing password; the web GUI will not work until you set a password with \"hockit passwd\"");
+			if (tty) console.log("Current HockIt Configuration:");
+			const table = {
+				"WebRoot": (hockit.config.webroot === "") ? "Not Set. Default: " + hockit.webroot : hockit.config.webroot,
+				"HTTP Port": hockit.config.port,
+				"Domain Name": (hockit.config.fqdn === "") ? "Not Set" : hockit.config.fqdn,
+				"SSL Key": (hockit.config.sslKey === "") ? "Not Set" : hockit.config.sslKey,
+				"SSL Cert": (hockit.config.sslCert === "") ? "Not Set" : hockit.config.sslCert,
+				"SSL Passphrase": (hockit.config.sslPass === "") ? "Not Set" : "Set",
+				"Password": (hockit.config.hash === "") ? "Not Set" : "Set",
+				"Total Files": Object.keys(hockit.config.links).length,
+				"Total API Tokens": Object.keys(hockit.config.tokens).length
+			};
+			if (tty) console.table(table);
+			else out(JSON.stringify(table));
+			return;
+		}
+		if (arg === "reset") {
+			if (tty) {
+				console.log("Resetting HockIt configuration to default.");
+				console.warn("WARNING: Missing password; the web GUI will not work until you set a password with \"hockit passwd\"");
+			}
+			hockit.resetConfig();
+			return;
+		}
 	}
 	if (argName === "token") {
 		if (arg === null) {
@@ -144,8 +188,12 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		}
 	}
 	if (argName === "passwd") {
-		if (arg !== null) {
-			if (tty) console.log("Setting new HockIt password.");
+		if (tty) {
+			console.log("Setting new HockIt password.");
+			getPass(readline).then(str => hockit.setPassword(str)).catch(err => process.stdout.write(err)).then(() => {
+				if (!startedServer) ttyInput.close();
+			});
+		} else if (arg !== null) {
 			hockit.setPassword(arg);
 		} else {
 			if (tty) console.warn("Unsetting HockIt password; the web GUI will not work until it is reset!");
@@ -187,34 +235,18 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		return;
 	}
 	if (argName === "ssl") {
-		if (arg === "key") {
-			if (arg2 === null) {
-				if (tty) console.error(missing("PEM private key path"));
-				else process.exit(9);
-				return;
+		function checkSsl() {
+			var keyStatus = true;
+			var certStatus = true;
+			if (hockit.config.sslCert === "") {
+				certStatus = "The PEM SSL certificate is not set. Set it up with: hockit ssl cert <path>";
 			}
-			const key = arg2;
-			if (tty) console.log("Setting SSL private key path to " + key);
-			hockit.config.sslKey = key;
-			hockit.saveConfig(hockit.config);
-			return;
-		} else if (arg === "cert") {
-			if (arg2 === null) {
-				if (tty) console.error(missing("PEM certificate"));
-				else process.exit(9);
-				return;
+			if (hockit.config.sslKey === "") {
+				keyStatus = "The PEM SSL private key is not set. Set it up with: hockit ssl key <path>";
 			}
-			const cert = arg2;
-			if (tty) console.log("Setting SSL certificate path to " + cert);
-			hockit.config.sslCert = cert;
-			hockit.saveConfig(hockit.config);
-			return;
-		}
-		var keyStatus = true;
-		var certStatus = true;
-		function logStatus() {
 			const ok = (keyStatus === true && certStatus === true);
 			if (tty) {
+				console.log("SSL status: " + (hockit.config.ssl ? "ENABLED" : "DISABLED"));
 				console.log("The HockIt SSL configuration status is " + (ok ? "OK:" : "INVALID:"));
 				if (!ok) {
 					console.log(keyStatus);
@@ -226,37 +258,87 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 				return;
 			} else if (!ok) process.exit(1);
 		}
-		function checkCert() {
-			if (hockit.config.sslCert === "") {
-				certStatus = "The PEM SSL certificate is not set. Set it up with: hockit ssl cert <path>";
-				logStatus();
-			} else fs.access(hockit.config.sslCert, fs.constants.F_OK | fs.constants.R_OK, (err) => {
-				if (err) certStatus = err.message;
-				logStatus();
-			});
+		if (arg === null) {
+			checkSsl();
+			return;
 		}
-		if (hockit.config.sslKey === "") {
-			keyStatus = "The PEM SSL private key is not set. Set it up with: hockit ssl key <path>";
-			checkCert();
-		} else fs.access(hockit.config.sslKey, fs.constants.F_OK | fs.constants.R_OK, (err) => {
-			if (err) keyStatus = err.message;
-			checkCert();
-		});
-		return;
+		if (arg === "enable") {
+			if (tty) console.log("Enabling HockIt SSL");
+			hockit.config.ssl = true;
+			hockit.saveConfig(hockit.config);
+			if (tty) checkCert();
+			if (tty) console.log("HockIt SSL enabled. Ensure that you have set up an SSL certificate/key/pasphrase with:\n\thockit ssl cert <path>\n\thockit ssl key <path>");
+			if (tty) console.log("\nOr, if you want to disable SSL:\n\thockit ssl disable");
+			return;
+		}
+		if (arg === "disable") {
+			if (tty) console.log("Disabling HockIt SSL");
+			hockit.config.ssl = false;
+			hockit.saveConfig(hockit.config);
+			return;
+		}
+		if (arg === "key") {
+			if (arg2 === null) {
+				console.log("Unsetting HockIt SSL PEM private key path.");
+				hockit.config.sslKey = "";
+			} else {
+				if (tty) console.log("Setting HockIt SSL private key path to " + arg2);
+				hockit.config.sslKey = arg2;
+			}
+			hockit.saveConfig(hockit.config);
+			return;
+		} else if (arg === "cert") {
+			if (arg2 === null) {
+				console.log("Unsetting HockIt SSL PEM certificate path.");
+				hockit.config.sslCert = "";
+			} else {
+				if (tty) console.log("Setting HockIt SSL certificate path to " + arg2);
+				hockit.config.sslCert = arg2;
+			}
+			hockit.saveConfig(hockit.config);
+			return;
+		} else if (arg === "pass") {
+			if (tty) {
+				if (arg2 === "unset") {
+					console.log("Unsetting HockIt SSL key passphrase.");
+					hockit.config.sslPass = "";
+					hockit.saveConfig(hockit.config);
+					return;
+				}
+				console.log("Setting HockIt SSL key passphrase.");
+				getPass(readline).then(str => {
+					hockit.config.sslPass = str;
+					hockit.saveConfig(hockit.config);
+				}).catch(console.error).then(() => {
+					if (!startedServer) ttyInput.close();
+				});
+			} else if (arg2 !== null) {
+				hockit.config.sslPass = arg2;
+				hockit.saveConfig(hockit.config);
+			} else {
+				hockit.config.sslPass = "";
+				hockit.saveConfig(hockit.config);
+			}
+			return;
+		}
 	}
 	if (argName === "list") {
 		hockit.setupWebroot();
 		if (arg === null) var list = hockit.list();
 		else var list = hockit.find(arg);
+
 		if (list.total === 0) {
-			if (tty) console.log("0 files downloadable in " + resolvePath(hockit.webroot + "/uploads"));
+			if (tty) console.log("0 HockIt files downloadable in " + resolvePath(hockit.webroot + "/uploads"));
 			else process.exit(1);
+		} else if (arg !== null && list.files.length === 0) {
+				console.log("Hockit file not found.");
+				
 		} else {
 			if (hockit.config.fqdn === "") var host = "http://localhost";
 			else var host = "http://" + hockit.config.fqdn + "";
 			if (hockit.config.port !== 80) host += (":" + hockit.config.port);
 			host += "/";
-			if (tty) console.log(list.total + " files downloadable in " + resolvePath(hockit.webroot + "/uploads"));
+			if (tty) console.log(list.total + " HockIt files downloadable in " + resolvePath(hockit.webroot + "/uploads"));
 			if (tty) console.log(list.files.map(file => "\t" + host + file.hash + " -> " + file.name).join("\n"));
 			else out(JSON.stringify(list.files));
 		}
@@ -266,11 +348,11 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		hockit.setupWebroot();
 		if (arg !== null) {
 			if (!(arg in hockit.config.links)) {
-				if (tty) console.log("File not found.");
+				if (tty) console.log("HockIt file not found.");
 				else process.exit(1);
 				return;
 			}
-			if (tty) console.log("Deleting file " + arg + " -> " + hockit.config.links[arg].name);
+			if (tty) console.log("Deleting HockIt file " + arg + " -> " + hockit.config.links[arg].name);
 			hockit.delete(arg);
 		} else if (tty) console.error(missing("hash"));
 		else process.exit(9);
@@ -280,7 +362,7 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		hockit.setupWebroot();
 		if (arg !== null) {
 			const path = arg;
-			if (tty) console.log("Uploading file " + path);
+			if (tty) console.log("Uploading file to HockIt: " + path);
 			const hash = hockit.copy(path);
 			if (tty) console.log("http://" + ((hockit.config.fqdn !== "") ? hockit.config.fqdn + "/" + hash : "localhost" + ((hockit.config.port !== 80) ? ":" + hockit.config.port : "") + "/" + hash));
 			else out(hash);
@@ -289,7 +371,7 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		return;
 	}
 	if (argName !== null) {
-		if (tty) console.error("Syntax error. Unknown command.");
-		else process.exit(9);
+		if (tty) console.error("HockIt CLI syntax error! Invalid subcommand \"" + argName + "\"");
+		else if (!startedServer) process.exit(9);
 	}
 }
