@@ -266,7 +266,7 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 			if (tty) console.log("Enabling HockIt SSL");
 			hockit.config.ssl = true;
 			hockit.saveConfig(hockit.config);
-			if (tty) checkCert();
+			if (tty) checkSsl();
 			if (tty) console.log("HockIt SSL enabled. Ensure that you have set up an SSL certificate/key/pasphrase with:\n\thockit ssl cert <path>\n\thockit ssl key <path>");
 			if (tty) console.log("\nOr, if you want to disable SSL:\n\thockit ssl disable");
 			return;
