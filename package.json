@@ -1,6 +1,6 @@
 {
   "name": "hockit",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "description": "HockIt is a super-simple HTTP file sharing server; it has a web GUI, a JSON API, and a CLI.",
   "keywords": [
     "file",
@@ -26,13 +26,23 @@
   },
   "homepage": "https://github.com/Floofies/hockit#readme",
   "dependencies": {
-    "express": "",
+    "argv-split": "",
     "bcrypt": "",
-    "nanoid": "",
-    "multer": "",
+    "express": "",
     "filenamify": "",
     "image-thumbnail": "",
-    "argv-split": ""
+    "multer": "",
+    "nanoid": ""
+  },
+  "devDependencies": {
+    "marked": "^0.7.0",
+    "marked-man": "^0.7.0"
+  },
+  "scripts": {
+    "prepare": "./prepare.js"
+  },
+  "directories": {
+    "man": "bin"
   },
   "bin": {
     "hockit": "bin/hockit_cli.js"

@@ -1,1 +1,1 @@
-{"webroot":"","port":80,"fqdn":"","sslKey":"","sslCert":"","sslPass":"","links":{},"tokens":{},"hash":""}
+{"webroot":"","port":8080,"fqdn":"","ssl":false,"sslKey":"","sslCert":"","sslPass":"","links":{},"tokens":{},"hash":""}

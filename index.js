@@ -10,6 +10,7 @@ function Hockit(config = null) {
 		webroot: this.hockitPath + "/webroot",
 		port: 8080,
 		fqdn: "",
+		ssl: false,
 		sslKey: "",
 		sslCert: "",
 		sslPass: "",
@@ -29,6 +30,7 @@ function Hockit(config = null) {
 	else this.webroot = this.config.webroot;
 }
 module.exports = Hockit;
+// Auto-inject config as an argument into the prototype methods.
 const method = func => function (...args) {
 	args.push(this.config);
 	return func.apply(this, args);
@@ -103,20 +105,47 @@ function unsetPassword(config) {
 }
 function setupWebroot(config) {
 	const webroot = this.webroot;
-	try { fs.accessSync(webroot, fs.constants.F_OK | fs.constants.R_OK); }
+	const FR = fs.constants.F_OK | fs.constants.R_OK;
+	try { fs.accessSync(webroot, FR); }
 	catch (err) { fs.mkdirSync(webroot, { recursive: true }); }
-	try { fs.accessSync(webroot + "/index.html", fs.constants.F_OK | fs.constants.R_OK); }
-	catch (_) { fs.copyFileSync(__dirname + "/webroot/index.html", webroot + "/index.html"); }
-	try { fs.accessSync(webroot + "/uploads", fs.constants.F_OK | fs.constants.R_OK); }
+	const indexPath = webroot + "/index.html";
+	const defaultIndexPath = __dirname + "/webroot/index.html";
+	try {
+		fs.accessSync(indexPath, FR);
+		const index = fs.readFileSync(indexPath).toString();
+		const defaultIndex = fs.readFileSync(defaultIndexPath).toString();
+		if (index !== defaultIndex) throw new Error("Webroot Index.html changed");
+	} catch (_) {
+		fs.copyFileSync(defaultIndexPath, indexPath);
+	}
+	try { fs.accessSync(webroot + "/uploads", FR); }
 	catch (_) { fs.mkdirSync(webroot + "/uploads"); }
-	try { fs.accessSync(webroot + "/uploads/index.html", fs.constants.F_OK | fs.constants.R_OK); }
-	catch (_) { fs.copyFileSync(__dirname + "/webroot/uploads/index.html", webroot + "/uploads/index.html"); }
-	try { fs.accessSync(webroot + "/themes", fs.constants.F_OK | fs.constants.R_OK); }
+	const listIndexPath = webroot + "/uploads/index.html";
+	const defaultListIndexPath = __dirname + "/webroot/uploads/index.html";
+	try {
+		fs.accessSync(listIndexPath, FR);
+		const listIndex = fs.readFileSync(listIndexPath).toString();
+		const defaultListIndex = fs.readFileSync(defaultListIndexPath).toString();
+		if (listIndex !== defaultListIndex) throw new Error("Webroot uploads/Index.html changed");
+	} catch (_) {
+		fs.copyFileSync(defaultListIndexPath, listIndexPath);
+	}
+	try { fs.accessSync(webroot + "/themes", FR); }
 	catch (_) { fs.mkdirSync(webroot + "/themes"); }
-	const files = fs.readdirSync(__dirname + "/webroot/themes");
+	const files = fs.readdirSync(__dirname + "/webroot/themes/");
+	const defaultThemesPath = __dirname + "/webroot/themes/"
+	const themesPath = webroot + "/themes/"
 	for (const file of files) {
-		try { fs.accessSync(webroot + "/themes/" + file, fs.constants.F_OK | fs.constants.R_OK); }
-		catch (_) { fs.copyFileSync(__dirname + "/webroot/themes/" + file, webroot + "/themes/" + file); }
+		const defaultPath = defaultThemesPath + file;
+		const path = themesPath + file;
+		try {
+			fs.accessSync(path, FR);
+			const data = fs.readFileSync(path).toString();
+			const defaultData = fs.readFileSync(defaultPath).toString();
+			if (data !== defaultData) throw new Error("Webroot themes/" + file + " changed");
+		} catch (_) {
+			fs.copyFileSync(defaultPath, path);
+		}
 	}
 }
 function getHash(config) {
@@ -224,17 +253,13 @@ function revokeToken(name, config) {
 	this.saveConfig(config);
 }
 function createToken(name, config) {
-	return new Promise((resolve, reject) => {
-		bcrypt.genSalt(10, (e, token) => {
-			if (e) throw e;
-			config.tokens.push([
-				name,
-				token
-			]);
-			this.saveConfig(config);
-			resolve(token);
-		});
-	});
+	const token = nanoid(32);
+	config.tokens.push([
+		name,
+		token
+	]);
+	this.saveConfig(config);
+	return token;
 }
 function startServer() {
 	return require(__dirname + "/src/httpd.js")(this);

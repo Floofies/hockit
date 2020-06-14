@@ -1,0 +1,118 @@
+.TH "HOCKIT" "1" "June 2020" "" ""
+.SH "NAME"
+\fBHOCKIT\fR
+.SH NAME
+.P
+hockit \- File sharing server
+.SH SYNOPSIS
+.P
+\fBhockit [command]\fP
+\fBhockit [command] [parameter]\fP
+\fBhockit [command] [option]\fP
+\fBhockit [command] [option] [parameter]\fP
+.SH DESCRIPTION
+.P
+HockIt is super\-simple file sharing server software written in NodeJS; you can use it via the CLI in a Terminal, HTTP in a web browser, the REST API, or a standard I/O interface\.
+.P
+Hockit implements a traditional REST API via the Get and Post HTTP request methods; response bodies are in JSON format, and are sometimes omitted in favor of HTTP status codes\.
+.P
+To access the REST API, you must supply a valid token in the \fBAuthorization\fP HTTP request header\. API tokens can be generated/revoked via CLI, see \fBAPI Token Commands\fP\|\.
+.SH COMMANDS, OPTIONS, AND PARAMETERS
+.SS File Server Commands
+.P
+\fBlist\fP
+    Lists all uploaded files and their shortlinks\.
+.P
+\fBlist [hash]\fP
+    Lists a single uploaded file using option \fBhash\fP\|\.
+.P
+\fBdelete [hash]\fP
+    Deletes a file using option \fBhash\fP\|\.
+.P
+\fBup [path]\fP
+    Uploads a file and returns a shortlink to it\.
+.P
+\fBstart\fP
+    Starts the HockIt HTTP server on this session\. If called via a TTY, a REPL session will be started to allow the input of additional commands while the HTTP server is running\.
+.SS General Configuration Commands
+.P
+Syntax: \fBhockit [command] [parameter]\fP
+.P
+\fBconfig\fP
+    Lists the current HockIt configuration status\.
+.P
+\fBconfig reset\fP
+    Resets all configuration settings to default values, and unsets all passwords\.
+.P
+\fBpasswd\fP
+    Sets the password for uploading/listing via the web GUI; supplying a blank password unsets it and will cause some webGUI features to stop working\.
+.P
+\fBdomain [fqdn]\fP
+    Sets the option \fBfqdn\fP for use in generation of shortlink URLs\.
+.P
+\fBport [uri]\fP
+    Binds the HTTP server to option \fBuri\fP, which can be a port number, host, or socket/handle path\.
+.P
+\fBwebroot [path]\fP
+    Serves files from given path via the HTTP server\.
+    Requires both read & write permissions\.
+    The default webroot is located in ~/\.hockit/webroot
+.SH SSL Configuration Commands
+.P
+Syntax: \fBhockit ssl [option] [parameter]\fP
+.P
+\fBssl\fP
+    Checks the validity of the current SSL configuration\.
+.P
+\fBssl enable\fP
+    Enables HTTPS/SSL and imports the SSL PEM certificate & key files when
+    \fBhockit start\fP is invoked\.
+.P
+\fBssl disable\fP
+    Disables HTTPS/SSL and ignores any given certificate/key\.
+.P
+\fBssl cert [path]\fP
+    Sets the filesystem option \fBpath\fP to the SSL PEM certificate file\.
+.P
+\fBssl cert unset\fP
+    Unsets the filesystem path to the SSL PEM certificate file\.
+.P
+\fBssl key [path]\fP
+    Sets the filesystem option \fBpath\fP to the SSL PEM private key file\.
+.P
+\fBssl key unset\fP
+    Unsets the filesystem path to the SSL PEM private key file\.
+.P
+\fBssl pass\fP
+    Sets the passphrase for the SSL PEM private key file via a TTY prompt\.
+.P
+\fBssl pass [passphrase]\fP
+    Sets the passphrase for the SSL PEM private key file via the standard
+    I/O interface\. Cleartext\. Not reccomended\.
+.P
+\fBssl pass unset\fP
+    Unsets the passphrase for the SSL PEM private key file\.
+.SH API Token Commands
+.P
+Syntax: option \fBhockit token [option] [parameter]\fP
+.P
+Running option \fBhockit token\fP without options will list all valid API tokens and their nicknames\.
+.P
+\fBtoken list\fP
+    Lists all API tokens\.
+.P
+\fBtoken list [nickname]\fP
+    Searches for an API token usng option \fBnickname\fP\|\.
+.P
+\fBtoken revoke [nickname]\fP
+    Permanently revokes an API token using option \fBnickname\fP from service, denying all future API requests made with that token\.
+.P
+\fBtoken create [nickname]\fP
+    Creates and returns a new API token, indexes it using option \fBnickname\fP\|\.
+.SH AUTHOR
+.P
+Written by Dani Glore
+.SH REPORTING BUGS
+.P
+Please create an Issue on GitHub\. Describe how to reproduce the bug\.
+https://github\.com/Floofies/hockit/issues

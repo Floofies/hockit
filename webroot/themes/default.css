@@ -58,31 +58,8 @@ button {
 	width:100%;
 	font-size:1em;
 }
-@media screen and (max-width: 2040px) {
-	.main {
-		max-width:60vw;
-	}
-
-}
-@media screen and (max-width: 1350px) {
-	.main {
-		max-width:80vw;
-	}
-
-}
-@media screen and (max-width: 850px) {
-	.main {
-		max-width:90vw;
-	}
-}
-@media screen and (max-width: 750px) {
-	.main {
-		max-width:100vw;
-	}
-
-}
 .uploadBox {
-	padding:25px;
+	padding:1.2em;
 	background-color: white;
 	border: 1px solid #d6d6d6;
 	box-shadow: 2px 3px 6px dimgrey;
@@ -95,14 +72,23 @@ button {
 	min-width:10em;
 	display:flex;
 	flex-flow:row;
+	flex-wrap: nowrap;
 	justify-content: space-between;
 	align-items: center;
 	padding-left:10px;
 	padding-right:10px;
 }
+.controls {
+	display:inline-block;
+	width:auto;
+	white-space: nowrap;
+}
 .total {
+	display:inline-block;
 	height:1em;
 	padding-right:0.3em;
+	word-break: keep-all;
+	white-space: nowrap;
 }
 .pageButtons {
 	display:flex;
@@ -112,7 +98,7 @@ button {
 	justify-content: space-between;
 }
 .controlBtn {
-	padding:5px;
+	padding:0.5em;
 	width:1.5em;
 	display:inline-block;
 	cursor:pointer;
@@ -124,6 +110,7 @@ button {
 }
 .controlBtn:hover {
 	opacity:1;
+	background-color:rgba(255,255,255, 0.3);
 }
 .controlBtn:active {
 	border-radius: 90px;
@@ -236,11 +223,13 @@ img[src="/themes/file-download-outline.png"]:hover {
 	padding-bottom:0.3em;
 }
 .listView .date {
-	line-height: 2em;
+	line-height: 1.3em;
 	padding:0px;
+	width:7em;
 }
 .name {
 	width:100%;
+	vertical-align: middle;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
@@ -258,8 +247,9 @@ img[src="/themes/file-download-outline.png"]:hover {
 	text-align:center;
 }
 .listView .name {
+	height:100%;
 	direction: rtl;
-	line-height: 1.2em;
+	line-height: 2em;
 	max-width:none;
 	padding-left:0.3em;
 	text-align:left;
@@ -339,4 +329,54 @@ img[src="/themes/file-download-outline.png"]:hover {
 }
 .flip {
 	transform:rotate(180deg);
+}
+@media screen and (max-width: 2040px) {
+	.main {
+		max-width:60vw;
+	}
+
+}
+@media screen and (max-width: 1350px) {
+	.main {
+		max-width:80vw;
+	}
+
+}
+@media screen and (max-width: 850px) {
+	.uploadBox {
+		padding:0.3em;
+	}
+	.main {
+		max-width:90vw;
+	}
+	.topRow {
+		display:flex;
+		flex-flow:column;
+	}
+	.pageButtons {
+		order:-1;
+		padding-bottom:0.2em;
+	}
+	.controlBtn {
+		width:2em;
+	}
+}
+@media screen and (max-width: 750px) {
+	.heading {
+		margin-top:0.2em;
+		margin-bottom:0.2em;
+	}
+	.main {
+		max-width:99vw;
+	}
+	.list {
+		padding:0px;
+	}
+	.listView .item {
+		max-width:99vw;
+	}
+	.listView .date {
+		padding-right:0.2em;
+	}
+
 }

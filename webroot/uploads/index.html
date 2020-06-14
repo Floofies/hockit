@@ -79,6 +79,7 @@
 				window.localStorage.setItem("view", "grid");
 				viewGridBtn.classList.add("selectedBtn");
 				viewListBtn.classList.remove("selectedBtn");
+				truncate();
 			}
 			function setList() {
 				if (curView === "list") return;
@@ -191,7 +192,7 @@
 				name.setAttribute("href", "/" + file.hash);
 				const copyBtn = templ.querySelector("[name=copy]");
 				copyBtn.addEventListener("click", () => {
-					const url = "http://" + window.location.hostname + "/" + file.hash;
+					const url = window.location.protocol + "//" + window.location.host + "/" + file.hash;
 					copy(url);
 					flash("Copied " + url);
 				});

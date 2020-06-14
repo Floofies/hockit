@@ -1,0 +1,102 @@
+
+ HOCKIT(1)
+ ---------
+
+  NAME
+  ----
+hockit - File sharing server
+
+  SYNOPSIS
+  --------
+ hockit [command] 
+ hockit [command] [parameter] 
+ hockit [command] [option] 
+ hockit [command] [option] [parameter] 
+
+  DESCRIPTION
+  -----------
+HockIt is super-simple file sharing server software written in NodeJS; you can use it via the CLI in a Terminal, HTTP in a web browser, the REST API, or a standard I/O interface.
+Hockit implements a traditional REST API via the Get and Post HTTP request methods; response bodies are in JSON format, and are sometimes omitted in favor of HTTP status codes.
+To access the REST API, you must supply a valid token in the  Authorization  HTTP request header. API tokens can be generated/revoked via CLI, see  API Token Commands .
+
+  COMMANDS, OPTIONS, AND PARAMETERS
+  ---------------------------------
+
+   File Server Commands
+   --------------------
+ list 
+    Lists all uploaded files and their shortlinks.
+ list [hash] 
+    Lists a single uploaded file using option  hash .
+ delete [hash] 
+    Deletes a file using option  hash .
+ up [path] 
+    Uploads a file and returns a shortlink to it.
+ start 
+    Starts the HockIt HTTP server on this session. If called via a TTY, a REPL session will be started to allow the input of additional commands while the HTTP server is running.
+
+   General Configuration Commands
+   ------------------------------
+Syntax:  hockit [command] [parameter] 
+ config 
+    Lists the current HockIt configuration status.
+ config reset 
+    Resets all configuration settings to default values, and unsets all passwords.
+ passwd 
+    Sets the password for uploading/listing via the web GUI; supplying a blank password unsets it and will cause some webGUI features to stop working.
+ domain [fqdn] 
+    Sets the option  fqdn  for use in generation of shortlink URLs.
+ port [uri] 
+    Binds the HTTP server to option  uri , which can be a port number, host, or socket/handle path.
+ webroot [path] 
+    Serves files from given path via the HTTP server.
+    Requires both read & write permissions.
+    The default webroot is located in ~/.hockit/webroot
+
+  SSL Configuration Commands
+  --------------------------
+Syntax:  hockit ssl [option] [parameter] 
+ ssl 
+    Checks the validity of the current SSL configuration.
+ ssl enable 
+    Enables HTTPS/SSL and imports the SSL PEM certificate & key files when
+     hockit start  is invoked.
+ ssl disable 
+    Disables HTTPS/SSL and ignores any given certificate/key.
+ ssl cert [path] 
+    Sets the filesystem option  path  to the SSL PEM certificate file.
+ ssl cert unset 
+    Unsets the filesystem path to the SSL PEM certificate file.
+ ssl key [path] 
+    Sets the filesystem option  path  to the SSL PEM private key file.
+ ssl key unset 
+    Unsets the filesystem path to the SSL PEM private key file.
+ ssl pass 
+    Sets the passphrase for the SSL PEM private key file via a TTY prompt.
+ ssl pass [passphrase] 
+    Sets the passphrase for the SSL PEM private key file via the standard
+    I/O interface. Cleartext. Not reccomended.
+ ssl pass unset 
+    Unsets the passphrase for the SSL PEM private key file.
+
+  API Token Commands
+  ------------------
+Syntax: option  hockit token [option] [parameter] 
+Running option  hockit token  without options will list all valid API tokens and their nicknames.
+ token list 
+    Lists all API tokens.
+ token list [nickname] 
+    Searches for an API token usng option  nickname .
+ token revoke [nickname] 
+    Permanently revokes an API token using option  nickname  from service, denying all future API requests made with that token.
+ token create [nickname] 
+    Creates and returns a new API token, indexes it using option  nickname .
+
+  AUTHOR
+  ------
+Written by Dani Glore
+
+  REPORTING BUGS
+  --------------
+Please create an Issue on GitHub. Describe how to reproduce the bug.
+https://github.com/Floofies/hockit/issues

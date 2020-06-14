@@ -11,6 +11,7 @@ function makeApp(hockit) {
 	hockit.setupWebroot();
 	function AuthError(str = "") {
 		Error.call(this, [str]);
+		this.message = str;
 	}
 	AuthError.prototype = Object.create(Error.prototype);
 	AuthError.prototype.name = "AuthError";
@@ -19,8 +20,8 @@ function makeApp(hockit) {
 			const token = req.get("authorization");
 			req.api = typeof token !== "undefined";
 			if (req.api) {
-				if (hockit.config.tokens.every(pair => pair.token !== token)) reject(new AuthError("Invalid API token!"));
-				resolve();
+				if (hockit.config.tokens.every(pair => pair[1] !== token)) reject(new AuthError("Invalid API token!"));
+				else resolve();
 				return;
 			}
 			if (!("body" in req) || !("password" in req.body)) {
@@ -48,7 +49,7 @@ function makeApp(hockit) {
 	function handleError(err, req, res, next) {
 		const api = "api" in req && req.api;
 		if (err.name === "AuthError") {
-			if (api) res.status(401).send(wrapDataAPI(err, null));
+			if (api) res.status(401).send(wrapDataAPI(err.message, null));
 			else res.redirect(303, "/" + wrapDataURL("Incorrect Password"));
 		} else {
 			if (process.stdout.isTTY) console.error(err);
@@ -67,7 +68,7 @@ function makeApp(hockit) {
 		}
 	});
 	app.get("/_healthcheck", (req, res) => {
-		res.sendStatus(200);
+		res.send("OK");
 	});
 	app.use(express.static(hockit.webroot));
 	app.post("/list",
@@ -169,8 +170,8 @@ function startServer(hockit, app) {
 		var server = app.listen(hockit.config.port);
 	} else {
 		if (hockit.config.ssl && (hockit.config.sslCert === "" || hockit.config.sslKey === "")) {
-			console.error("The required SSL PEM certificate & SSL PEM key paths are missing. Set them up with:\n\thockit ssl cert <path>\n\thockit ssl key <path>");
-			console.error("\nOr, if you want to disable SSL:\n\thockit ssl disable");
+			if (tty) console.error("The required SSL PEM certificate & SSL PEM key paths are missing. Set them up with:\n\thockit ssl cert <path>\n\thockit ssl key <path>");
+			if (tty) console.error("\nOr, if you want to disable SSL:\n\thockit ssl disable");
 			process.exit(1);
 		}
 		const https = require("https");

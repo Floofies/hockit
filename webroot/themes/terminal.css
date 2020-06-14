@@ -70,6 +70,9 @@ a:hover {
 .controlBtn {
 	filter:none;
 }
+.controlBtn:hover {
+	background-color:rgba(0,0,0, 0.8);
+}
 .controlBtn:active {
 	opacity:1;
 }

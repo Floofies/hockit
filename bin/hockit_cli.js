@@ -9,18 +9,9 @@ function missing(name) {
 	return "Syntax error. Missing " + name + " argument."
 }
 function helpPage() {
-	console.log("Syntax: hockit <command> <argument>");
-	console.log("\nGeneral Commands:");
-	console.log("list\n\tLists all uploaded files and their hashes.");
-	console.log("list <hash>\n\tLooks up a file by its hash.");
-	console.log("delete <hash>\n\tDeletes a file using it's upload hash.");
-	console.log("up <file>\n\tUploads a file and returns a shortlink.");
-	console.log("start\n\tStarts the HockIt HTTP server on this session.");
-	console.log("\nConfiguration Commands:");
-	console.log("passwd <password>\n\tSets the password.");
-	console.log("domain <uri>\n\tSets the FQDN or port number to bind with HTTP.");
-	console.log("port <port|host|path>\n\tSets the port, host, or path to bind with HTTP..");
-	console.log("webroot <path>\n\tServes files from given path via HTTP. Requires read & write permissions.");
+	const fs = require("fs");
+	const manpage = fs.readFileSync(__dirname + "manpage.txt").toString()
+	console.log(manpage);
 }
 if (process.argv.length >= 3) var argName = process.argv[2];
 else var argName = null;
@@ -76,12 +67,10 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 			args.unshift(hockit);
 			args.unshift(server);
 			reactor.apply(null, args);
-			if (prompting) {
-				return;
-			}
+			if (prompting) return;
 			process.stdout.write("> ");
 		});
-		process.stdout.write("> ");
+		process.stdout.write("Server REPL Online!\n> Type \"help\" for a list of commands.\n> Type \"exit\" to shut the server down.\n> ");
 		return;
 	}
 	function getPass() {
@@ -107,6 +96,7 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 				"WebRoot": (hockit.config.webroot === "") ? "Not Set. Default: " + hockit.webroot : hockit.config.webroot,
 				"HTTP Port": hockit.config.port,
 				"Domain Name": (hockit.config.fqdn === "") ? "Not Set" : hockit.config.fqdn,
+				"SSL Status": hockit.config.ssl ? "Enabled" : "Disabled",
 				"SSL Key": (hockit.config.sslKey === "") ? "Not Set" : hockit.config.sslKey,
 				"SSL Cert": (hockit.config.sslCert === "") ? "Not Set" : hockit.config.sslCert,
 				"SSL Passphrase": (hockit.config.sslPass === "") ? "Not Set" : "Set",
@@ -176,15 +166,15 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 				return;
 			}
 			const token = hockit.findToken(arg2);
-			if (pair !== null) {
+			if (token !== null) {
 				if (tty) console.error("Valid API token already exists: \n\t" + token[0] + " -> " + token[1]);
 				else process.exit(1);
 				return;
 			}
-			hockit.addToken(arg).then(token => {
-				if (tty) console.log("Generated new HockIt REST API token.\n\t" + arg + " -> " + token);
-				else out(token);
-			}).catch(e => { throw e });
+			const newToken = hockit.addToken(arg2);
+			if (tty) console.log("Generated new HockIt REST API token.\n\t" + arg2 + " -> " + newToken);
+			else out(token);
+			return;
 		}
 	}
 	if (argName === "passwd") {
@@ -331,8 +321,8 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 			if (tty) console.log("0 HockIt files downloadable in " + resolvePath(hockit.webroot + "/uploads"));
 			else process.exit(1);
 		} else if (arg !== null && list.files.length === 0) {
-				console.log("Hockit file not found.");
-				
+			console.log("Hockit file not found.");
+
 		} else {
 			if (hockit.config.fqdn === "") var host = "http://localhost";
 			else var host = "http://" + hockit.config.fqdn + "";
@@ -371,7 +361,7 @@ function reactor(server, hockit, argName, arg = null, arg2 = null) {
 		return;
 	}
 	if (argName !== null) {
-		if (tty) console.error("HockIt CLI syntax error! Invalid subcommand \"" + argName + "\"");
+		if (tty) console.error("HockIt CLI syntax error! Invalid subcommand in \"" + argName + "\"");
 		else if (!startedServer) process.exit(9);
 	}
 }
