@@ -42,7 +42,7 @@
     "prepare": "./prepare.js"
   },
   "directories": {
-    "man": "bin"
+    "man": "man"
   },
   "bin": {
     "hockit": "bin/hockit_cli.js"
