@@ -10,7 +10,7 @@ function missing(name) {
 }
 function helpPage() {
 	const fs = require("fs");
-	const manpage = fs.readFileSync(__dirname + "manpage.txt").toString()
+	const manpage = fs.readFileSync(__dirname + "/manpage.txt").toString()
 	console.log(manpage);
 }
 if (process.argv.length >= 3) var argName = process.argv[2];
