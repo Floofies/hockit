@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-const Hockit = require(__dirname + "/../index.js");
 const bcrypt = require("bcrypt");
 const fs = require('fs');
 const express = require('express');

@@ -3,6 +3,7 @@ const fs = require('fs');
 const nanoid = require("nanoid").nanoid;
 const filenamify = require("filenamify");
 const imageThumbnail = require("image-thumbnail");
+const FR = fs.constants.F_OK | fs.constants.R_OK;
 function Hockit(config = null) {
 	this.homePath = process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 	this.hockitPath = this.homePath + "/.hockit";
@@ -18,7 +19,7 @@ function Hockit(config = null) {
 		tokens: [],
 		hash: ""
 	};
-	try { fs.accessSync(this.hockitPath, fs.constants.F_OK | fs.constants.R_OK); }
+	try { fs.accessSync(this.hockitPath, FR); }
 	catch (_) { fs.mkdirSync(this.hockitPath); }
 	if (config !== null) {
 		this.config = config;
@@ -64,7 +65,7 @@ function resetConfig() {
 function readConfig(confPath) {
 	var confJson = null;
 	try {
-		fs.accessSync(confPath, fs.constants.F_OK | fs.constants.R_OK);
+		fs.accessSync(confPath, FR);
 		confJson = fs.readFileSync(confPath).toString("utf8");
 		if (!confJson) throw new TypeError();
 		this.config = JSON.parse(confJson);
@@ -105,7 +106,6 @@ function unsetPassword(config) {
 }
 function setupWebroot(config) {
 	const webroot = this.webroot;
-	const FR = fs.constants.F_OK | fs.constants.R_OK;
 	try { fs.accessSync(webroot, FR); }
 	catch (err) { fs.mkdirSync(webroot, { recursive: true }); }
 	const indexPath = webroot + "/index.html";
@@ -118,6 +118,16 @@ function setupWebroot(config) {
 	} catch (_) {
 		fs.copyFileSync(defaultIndexPath, indexPath);
 	}
+	const indexJSPath = webroot + "/index.js";
+	const defaultIndexJSPath = __dirname + "/webroot/index.js";
+	try {
+		fs.accessSync(indexJSPath, FR);
+		const indexJS = fs.readFileSync(indexJSPath).toString();
+		const defaultIndexJS = fs.readFileSync(defaultIndexJSPath).toString();
+		if (indexJS !== defaultIndexJS) throw new Error("Webroot Index.html changed");
+	} catch (_) {
+		fs.copyFileSync(defaultIndexJSPath, indexJSPath);
+	}
 	try { fs.accessSync(webroot + "/uploads", FR); }
 	catch (_) { fs.mkdirSync(webroot + "/uploads"); }
 	const listIndexPath = webroot + "/uploads/index.html";
@@ -126,9 +136,19 @@ function setupWebroot(config) {
 		fs.accessSync(listIndexPath, FR);
 		const listIndex = fs.readFileSync(listIndexPath).toString();
 		const defaultListIndex = fs.readFileSync(defaultListIndexPath).toString();
-		if (listIndex !== defaultListIndex) throw new Error("Webroot uploads/Index.html changed");
+		if (listIndex !== defaultListIndex) throw new Error("Webroot uploads/index.html changed");
 	} catch (_) {
 		fs.copyFileSync(defaultListIndexPath, listIndexPath);
+	}
+	const listJSPath = webroot + "/uploads/index.js";
+	const defaultListJSPath = __dirname + "/webroot/uploads/index.js";
+	try {
+		fs.accessSync(listIndexPath, FR);
+		const listJS = fs.readFileSync(listJSPath).toString();
+		const defaultListJS = fs.readFileSync(defaultListJSPath).toString();
+		if (listJS !== defaultListJS) throw new Error("Webroot uploads/index.js changed");
+	} catch (_) {
+		fs.copyFileSync(defaultListJSPath, listJSPath);
 	}
 	try { fs.accessSync(webroot + "/themes", FR); }
 	catch (_) { fs.mkdirSync(webroot + "/themes"); }

@@ -1,6 +1,6 @@
 {
   "name": "hockit",
-  "version": "2.1.2",
+  "version": "2.2.0",
   "description": "HockIt is a super-simple HTTP file sharing server; it has a web GUI, a JSON API, and a CLI.",
   "keywords": [
     "file",

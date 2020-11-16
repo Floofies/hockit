@@ -1,30 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 	<title>HockIt</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
 	<link id="themeLink" rel="stylesheet" href="/themes/default.css">
 	<script type="text/javascript" src="/themes/theme.js"></script>
-	<script type="text/javascript">
-		window.addEventListener("load", () => {
-			const file = document.getElementById("file");
-			const button = document.getElementById("button");
-			const form = document.getElementById("form");
-			file.addEventListener("change", () => {
-				if (file.files.length > 0) {
-					button.setAttribute("value", "Hock it up!");
-					form.setAttribute("action", "/up");
-				} else {
-					button.setAttribute("value", "List Files");
-					form.setAttribute("action", "/list");
-				}
-			});
-		});
-	</script>
+	<script type="text/javascript" src="index.js"></script>
 </head>
-
 <body>
 	<h1 id="heading" class="heading hup">hockit up</h1>
 	<div class="uploadBox">
@@ -48,5 +31,4 @@
 		<h4>v2.0.0</h4>
 	</div>
 </body>
-
 </html>
