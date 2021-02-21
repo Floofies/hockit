@@ -28,6 +28,11 @@ function mixin(datum1, datum2) {
 	patch(datum1, datum2);
 	patch(datum2, datum1);
 }
+Omnibus.prototype.initPlugins = async function () {
+	for (const plugin of this.plugins) {
+		if ("initPlugin" in plugin) plugin.initPlugin.call(plugin);
+	}
+};
 Omnibus.prototype.addDatum = function (datum1) {
 	if (!("def" in datum1)) throw new TypeError("Omnibus plugin loaded non-Datum value");
 	const type = datum1.def;
@@ -40,7 +45,7 @@ Omnibus.prototype.addPlugin = function (plugin) {
 	// Plugins become available as data & Omnibus-bound methods.
 	for (const prop in plugin) {
 		if (prop === "name" || prop === "version") continue;
-		if (prop === "initPlugin") plugin.initPlugin.call(plugin);
+		if (prop === "initPlugin") continue;
 		else this.addDatum(plugin[prop]);
 	}
 	this.plugins[pluginName] = plugin;
