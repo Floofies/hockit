@@ -1,12 +1,7 @@
 // AWS S3 plugin for HockIt webroot
 const { S3 } = require("aws-sdk");
+const multerS3 = require("multer-s3-v3");
 const { Datum } = require("../omnibus.js");
-// S3Client looks for these in the environment variables:
-// AWS_ACCESS_KEY_ID
-// AWS_SECRET_ACCESS_KEY
-// AWS_SESSION_TOKEN
-// AWS_REGION
-// AWS_S3_BUCKET_NAME
 const s3Region = ("AWS_REGION" in process.env) ? process.env.AWS_REGION : "us-east-1";
 const bucketName = ("AWS_S3_BUCKET_NAME" in process.env) ? process.env.AWS_S3 - BUCKET_NAME : "hockit-webroot";
 const s3 = new S3({ region: s3Region });
@@ -20,16 +15,29 @@ async function initPlugin() {
 		}).promise();
 		if (!prod && tty) console.info("S3 Bucket successfully found!");
 	} catch (e) {
-		if (e.name === "NoSuchBucket") {
-			await s3.createBucket({
-				Bucket: bucketName,
-				CreateBucketConfiguration: {
-					LocationConstraint: s3Region
-				}
-			}).promise();
-		}
+		if (e.name !== "NoSuchBucket") throw e;
+		await s3.createBucket({
+			Bucket: bucketName,
+			CreateBucketConfiguration: {
+				LocationConstraint: s3Region
+			}
+		}).promise();
 	}
 }
+const HTTPStorageDatum = new Datum("HTTPStorage",
+	function () {
+		return multerS3({
+			s3: s3,
+			bucket: bucketName,
+			metadata: (req, file, set) => {
+				set(null, { fieldName: file.fieldname });
+			},
+			key: (req, file, set) => {
+				set(null, { fieldName: file.fieldname });
+			}
+		});
+	}
+);
 const FileBlobDatum = new Datum("FileBlob",
 	null,
 	async function get(name) {
@@ -45,6 +53,7 @@ const FileBlobDatum = new Datum("FileBlob",
 	},
 	async function set(name, buf = null) {
 		try {
+			// Avoids overwriting existing files
 			await s3.headObject({
 				Bucket: bucketName,
 				Key: name
@@ -75,8 +84,9 @@ const FileBlobDatum = new Datum("FileBlob",
 	}
 );
 module.exports = {
-	name: "S3Plugin",
+	name: "S3FilePlugin",
 	version: "1.0.0",
 	initPlugin,
 	FileBlobDatum,
-}
+	HTTPStorageDatum
+};
