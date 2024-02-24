@@ -34,8 +34,6 @@ The anti-CSRF token is composed of an API access token with a lifetime of 5 minu
 
 HockIt is a small collection of user interfaces, plugins, and APIs which are focused on uploading and managing files with varying back-end technologies.
 
-## Foundational Technologies
-
 ## Plugins
 
 Plugins are implemented via the `Mixin` and `SetupMixin` modules.
